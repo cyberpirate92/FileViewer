@@ -5,7 +5,11 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -13,6 +17,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
@@ -90,6 +95,7 @@ public class EditorWindow extends JFrame {
 				int val = fileChooser.showOpenDialog(EditorWindow.this);
 				if (val == JFileChooser.APPROVE_OPTION) {
 					currentFile = fileChooser.getSelectedFile();
+					loadFileIntoEditor();
 				}
 				else {
 					
@@ -132,5 +138,38 @@ public class EditorWindow extends JFrame {
 		findMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F,
 				ActionEvent.ALT_MASK));
 		editMenu.add(findMenuItem);
+	}
+	
+	private void loadFileIntoEditor() {
+		if(logger.isDebugEnabled()) {
+			logger.debug("Loading file " + currentFile.getAbsolutePath() + " into editor");
+		}
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(currentFile));
+			String line;
+			
+			while((line = reader.readLine()) != null) {
+				editor.append(line);
+			}
+			
+			reader.close();
+		}
+		catch(FileNotFoundException fnfe) {
+			showErrorMessageDialog("The file doesn't exist, please open a new file");
+			currentFile = null;
+			logger.error(fnfe);
+		}
+		catch(IOException ioe) {
+			showErrorMessageDialog("An unhandled exception has occured, Please restart");
+			logger.error(ioe);
+		}
+		catch(Exception e) {
+			showErrorMessageDialog("An unhandled exception has occured, Please restart");
+			logger.error(e);
+		}
+	}
+	
+	private void showErrorMessageDialog(String message) {
+		JOptionPane.showMessageDialog(null, message);
 	}
 }
