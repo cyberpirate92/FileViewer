@@ -32,7 +32,7 @@ public class EditorWindow extends JFrame {
 	private static final long serialVersionUID = -4760621689475380711L;
 	private JPanel centerPanel, bottomPanel;
 	private JMenuBar menuBar;
-	private JMenu fileMenu, editMenu;
+	private JMenu fileMenu, editMenu, helpMenu;
 	private JTextArea editor;
 	private JLabel statusLabel;
 	private File currentFile;
@@ -122,9 +122,26 @@ public class EditorWindow extends JFrame {
 
 		setupFileMenu();
 		setupEditMenu();
+		setupHelpMenu();
 
 		menuBar.add(fileMenu);
 		menuBar.add(editMenu);
+		menuBar.add(helpMenu);
+	}
+	
+	private void setupHelpMenu() {
+		helpMenu = new JMenu("Help");
+		
+		JMenuItem aboutMenuItem = new JMenuItem("About");
+		aboutMenuItem.setMnemonic(KeyEvent.VK_A);
+		aboutMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, ActionEvent.ALT_MASK));
+		aboutMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				showMessageDialog("LF-Edit version 0.1\n A fast editor especially for large files");
+			}
+		});
+		
+		helpMenu.add(aboutMenuItem);
 	}
 
 	private void setupFileMenu() {
@@ -150,6 +167,11 @@ public class EditorWindow extends JFrame {
 				ActionEvent.ALT_MASK));
 		openFileMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				if(!isSessionSaved) {
+					if(showSaveConfirmationDialog("Before Opening a new file, would you like to save changes to the current one ?") == SessionState.CANCELLED) {
+						return;
+					}
+				}
 				final JFileChooser fileChooser = new JFileChooser();
 				int val = fileChooser.showOpenDialog(EditorWindow.this);
 				if (val == JFileChooser.APPROVE_OPTION) {
@@ -188,14 +210,11 @@ public class EditorWindow extends JFrame {
 				ActionEvent.ALT_MASK));
 		exitMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (!isSessionSaved) {
-					int choice = JOptionPane.showConfirmDialog(null,
-							"Changed have not been saved to file, exit ?",
-							"File not saved", JOptionPane.YES_NO_CANCEL_OPTION);
-					if (choice == JOptionPane.YES_OPTION) {
-						saveSessionToFile();
-						EditorWindow.this.dispose();
-					} else if (choice == JOptionPane.NO_OPTION) {
+				if(!isSessionSaved) {
+					if(showSaveConfirmationDialog("You have unsaved changes, do you want to save them before exiting?") == SessionState.CANCELLED) {
+						return;
+					}
+					else {
 						EditorWindow.this.dispose();
 						System.exit(0);
 					}
@@ -255,11 +274,32 @@ public class EditorWindow extends JFrame {
 	private void initNewSession() {
 		initNewSession("untitled");
 	}
+	
+	private SessionState showSaveConfirmationDialog(String customMessage) {
+		int option = JOptionPane.showConfirmDialog(null, customMessage, "Unsaved Changes", JOptionPane.YES_NO_CANCEL_OPTION);
+		if(option == JOptionPane.YES_OPTION) {
+			this.saveSessionToFile();
+			return SessionState.SAVE_SUCCESSFUL;
+		}
+		else if(option == JOptionPane.NO_OPTION) {
+			return SessionState.SAVE_ABORTED;
+		}
+		else {
+			return SessionState.CANCELLED;
+		}
+	}
+	
+	private SessionState showSaveConfirmationDialog() {
+		return showSaveConfirmationDialog("Your changes have not been saved,\nDo you want to save them?");
+	}
 
 	private void initNewSession(String filename) {
 
-		if (!isSessionSaved && this.editor.getText().length() != 0) {
-
+		if (!isSessionSaved) {
+			SessionState saveState = showSaveConfirmationDialog();
+			if(saveState == SessionState.CANCELLED) {
+				return;
+			}
 		}
 
 		this.setTitle(filename);
@@ -282,6 +322,7 @@ public class EditorWindow extends JFrame {
 	}
 
 	private void loadFileIntoEditor() {
+		editor.setText("");
 		if (logger.isDebugEnabled()) {
 			logger.debug("Loading file " + currentFile.getAbsolutePath()
 					+ " into editor");
@@ -298,19 +339,19 @@ public class EditorWindow extends JFrame {
 			reader.close();
 			this.setTitle(currentFile.getAbsolutePath());
 		} catch (FileNotFoundException fnfe) {
-			showErrorMessageDialog("The file doesn't exist, please open a new file");
+			showMessageDialog("The file doesn't exist, please open a new file");
 			currentFile = null;
 			logger.error(fnfe);
 		} catch (IOException ioe) {
-			showErrorMessageDialog("An unhandled exception has occured, Please restart");
+			showMessageDialog("An unhandled exception has occured, Please restart");
 			logger.error(ioe);
 		} catch (Exception e) {
-			showErrorMessageDialog("An unhandled exception has occured, Please restart");
+			showMessageDialog("An unhandled exception has occured, Please restart");
 			logger.error(e);
 		}
 	}
 
-	private void showErrorMessageDialog(String message) {
+	private void showMessageDialog(String message) {
 		JOptionPane.showMessageDialog(null, message);
 	}
 }
