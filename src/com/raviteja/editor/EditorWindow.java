@@ -224,11 +224,9 @@ public class EditorWindow extends JFrame {
 					if(showSaveConfirmationDialog("You have unsaved changes, do you want to save them before exiting?") == SessionState.CANCELLED) {
 						return;
 					}
-					else {
-						EditorWindow.this.dispose();
-						System.exit(0);
-					}
 				}
+				EditorWindow.this.dispose();
+				System.exit(0);
 			}
 		});
 		fileMenu.add(exitMenuItem);
