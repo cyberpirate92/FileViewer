@@ -22,6 +22,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.text.BadLocationException;
@@ -39,6 +40,7 @@ public class EditorWindow extends JFrame {
 	private File currentFile;
 	private final static Logger logger = Logger.getLogger(EditorWindow.class);
 	private boolean isSessionSaved;
+	private JScrollPane scrollPane;
 
 	public EditorWindow() {
 		super("LF-Edit v0.1");
@@ -111,10 +113,11 @@ public class EditorWindow extends JFrame {
 	private void setupPanels() {
 
 		editor = new JTextArea();
+		scrollPane = new JScrollPane(editor);
 		
 		centerPanel = new JPanel();
 		centerPanel.setLayout(new BorderLayout());
-		centerPanel.add(editor, BorderLayout.CENTER);
+		centerPanel.add(scrollPane, BorderLayout.CENTER);
 
 		bottomPanel = new JPanel();
 
