@@ -24,6 +24,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
+import javax.swing.text.BadLocationException;
 
 import org.apache.log4j.Logger;
 
@@ -75,6 +76,14 @@ public class EditorWindow extends JFrame {
 
 			@Override
 			public void keyReleased(KeyEvent e) {
+				if(e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_UP) {
+					try {
+						statusLabel.setText("Line " + (editor.getLineOfOffset(editor.getCaretPosition())+1));
+					} catch (BadLocationException ble) {
+						logger.error("Unable to get line number: " + ble);
+						statusLabel.setText("");
+					}
+				}
 			}
 		});
 		
@@ -101,10 +110,11 @@ public class EditorWindow extends JFrame {
 
 	private void setupPanels() {
 
-		centerPanel = new JPanel();
-
 		editor = new JTextArea();
-		centerPanel.add(editor);
+		
+		centerPanel = new JPanel();
+		centerPanel.setLayout(new BorderLayout());
+		centerPanel.add(editor, BorderLayout.CENTER);
 
 		bottomPanel = new JPanel();
 
@@ -251,12 +261,13 @@ public class EditorWindow extends JFrame {
 		if (this.currentFile != null) {
 			try {
 				BufferedWriter writer = new BufferedWriter(new FileWriter(
-						currentFile, true));
+						currentFile, false));
 				writer.write(editor.getText());
 				writer.flush();
 				writer.close();
 				isSessionSaved = true;
 				statusLabel.setText("File Saved");
+				this.setTitle(this.currentFile.getAbsolutePath());
 				if (logger.isDebugEnabled()) {
 					logger.debug("File saved to "
 							+ currentFile.getAbsolutePath());
