@@ -2,6 +2,7 @@ package com.raviteja.editor;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -14,6 +15,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -22,12 +24,15 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.text.BadLocationException;
 
 import org.apache.log4j.Logger;
+
+import com.ozten.font.JFontChooser;
 
 public class EditorWindow extends JFrame {
 
@@ -324,13 +329,62 @@ public class EditorWindow extends JFrame {
 
 		editMenu = new JMenu("Edit");
 
-		JMenuItem findMenuItem;
+		JMenuItem findMenuItem, fontMenuItem, tabSpaceSubMenu;
 
 		findMenuItem = new JMenuItem("Find");
 		findMenuItem.setMnemonic(KeyEvent.VK_F);
 		findMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F,
 				ActionEvent.ALT_MASK));
 		editMenu.add(findMenuItem);
+		
+		fontMenuItem = new JMenuItem("Font");
+		fontMenuItem.setMnemonic(KeyEvent.VK_T);
+		fontMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, ActionEvent.ALT_MASK));
+		fontMenuItem.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				Font selectedFont = JFontChooser.showDialog(EditorWindow.this);
+				if(selectedFont != null) {
+					editor.setFont(selectedFont);
+				}
+			}
+		});
+		editMenu.add(fontMenuItem);
+		
+		tabSpaceSubMenu = new JMenu("Tab Length");
+		editMenu.add(tabSpaceSubMenu);
+		
+		ButtonGroup tabSpaceButtonGroup = new ButtonGroup();
+		JMenuItem fourSpacedTabMenuItem, eightSpacedTabMenuItem;
+		
+		fourSpacedTabMenuItem = new JRadioButtonMenuItem("4 spaces");
+		fourSpacedTabMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				editor.setTabSize(4);
+				if(logger.isDebugEnabled()) {
+					logger.debug("Tab space set to 4 spaces");
+				}
+			}
+		});
+		tabSpaceButtonGroup.add(fourSpacedTabMenuItem);
+		tabSpaceSubMenu.add(fourSpacedTabMenuItem);
+		
+		eightSpacedTabMenuItem = new JRadioButtonMenuItem("8 spaces");
+		eightSpacedTabMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				editor.setTabSize(8);
+				if(logger.isDebugEnabled()) {
+					logger.debug("Tab space set to 8 spaces");
+				}
+			}
+		});
+		tabSpaceButtonGroup.add(eightSpacedTabMenuItem);
+		tabSpaceSubMenu.add(eightSpacedTabMenuItem);
+		
+		if(editor.getTabSize() == 4)
+			fourSpacedTabMenuItem.setSelected(true);
+		if(editor.getTabSize() == 8) {
+			eightSpacedTabMenuItem.setSelected(true);
+		}
 	}
 
 	private void loadFileIntoEditor() {
